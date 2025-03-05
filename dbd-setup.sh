@@ -17,6 +17,7 @@ mkdir -p "$FONT_DIR"
 echo -e "\nInstalling dependencies..."
 sudo apt-get update
 sudo apt-get install -y figlet lolcat toilet otf2bdf bdf2psf git
+clear
 
 # Clone and extract fonts
 echo -e "\nDownloading and installing figlet fonts..."
@@ -30,6 +31,7 @@ for repo in "${FONT_REPOS[@]}"; do
     git clone "$repo" "$tmp_dir"
     find "$tmp_dir" -type f -name "*.flf" -exec cp {} "$FONT_DIR/" \;
     rm -rf "$tmp_dir"
+    clear
 done
 
 # Confirm the default font exists
@@ -213,6 +215,10 @@ dbd-config() {
 }
 EOF
 
+# Add to .zshrc if missing
+if ! grep -q 'source ~/.oh-my-zsh/custom/plugins/dbd-plugin/dbd-plugin.zsh' "$HOME/.zshrc"; then
+    echo 'source ~/.oh-my-zsh/custom/plugins/dbd-plugin/dbd-plugin.zsh' >> "$HOME/.zshrc"
+fi
 
 # Finish message
 echo -e "\n\033[1;36mDBD System Plugin Installed Successfully!\033[0m"
@@ -220,6 +226,7 @@ echo -e "\n\033[1;33mWould you like to restart your terminal now?\033[0m"
 read -p "(y/N): " choice
 
 if [[ "$choice" =~ ^[Yy]$ ]]; then
+    source ~/.zshrc
     xfce4-terminal &
     exit
 else
