@@ -62,7 +62,7 @@ autoload -U add-zsh-hook
 
 # Font Loader (called directly within banner logic)
 load_dbd_font() {
-    FONT_PATH="$HOME/.dbd-plugin/dbd-fonts/export/${DBD_FONT}.flf"
+    FONT_PATH="$PLUGIN_DIR/dbd-fonts/export/${DBD_FONT}.flf"
     if [[ ! -f "$FONT_PATH" ]]; then
         echo "⚠️ Font not found: $FONT_PATH. Falling back to 'Standard'."
         FONT_PATH="$HOME/.dbd-plugin/dbd-fonts/export/Standard.flf"
@@ -220,16 +220,24 @@ if ! grep -q 'source ~/.oh-my-zsh/custom/plugins/dbd-plugin/dbd-plugin.zsh' "$HO
     echo 'source ~/.oh-my-zsh/custom/plugins/dbd-plugin/dbd-plugin.zsh' >> "$HOME/.zshrc"
 fi
 
-# Finish message
+# Final Installation Message
+clear
 echo -e "\n\033[1;36mDBD System Plugin Installed Successfully!\033[0m"
-echo -e "\n\033[1;33mWould you like to restart your terminal now?\033[0m"
-read -p "(y/N): " choice
 
-if [[ "$choice" =~ ^[Yy]$ ]]; then
-    source ~/.zshrc
+echo -e "\n\033[1;33mWould you like to restart your terminal now?\033[0m"
+echo -e "Press \033[1;32mEnter\033[0m to source \033[1;36m.zshrc\033[0m and restart \033[1;36mxfce4-terminal\033[0m."
+echo -e "Or press \033[1;33ms\033[0m to skip and handle it yourself."
+
+read -r -p "[Enter/s]: " choice
+
+if [[ -z "$choice" ]]; then
+    zsh -c "source ~/.zshrc" 
     xfce4-terminal &
     exit
+elif [[ "$choice" =~ ^[Ss]$ ]]; then
+    echo -e "\n\033[1;32mYou can manually reload later with:\033[0m"
+    echo "source ~/.zshrc"
 else
-    echo -e "\n\033[1;32mYou can manually restart your terminal later.\033[0m"
-    echo "Just run: source ~/.zshrc"
+    echo -e "\n\033[1;31mInvalid input. No action taken.\033[0m"
+    echo -e "\033[1;32mYou can restart or reload manually if needed.\033[0m"
 fi
