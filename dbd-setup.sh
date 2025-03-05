@@ -243,16 +243,69 @@ else
     sleep 0.5
     source ~/.zshrc
 
-    # Close current terminal and open a new one (specifically for xfce4-terminal)
-    if [[ "$TERMINAL_EMULATOR" == "xfce4-terminal" ]]; then
-        echo -e "\e[1;33mClosing the current terminal and opening a new xfce4-terminal...\e[0m"
-        # Close the current terminal
-        exit
-        # Open a new xfce4-terminal
-        xfce4-terminal & disown
-    else
-        echo -e "\e[1;31mUnknown terminal emulator: $TERMINAL_EMULATOR\e[0m"
-        echo -e "\e[1;33mFalling back to generic shell command: (sleep 0.5 && $SHELL)\e[0m"
+    # Attempt to detect the terminal emulator
+    if [[ -z "$TERMINAL_EMULATOR" ]]; then
+        # Attempt to detect based on $TERM if TERMINAL_EMULATOR is not set
+        if [[ -n "$TERM" ]]; then
+            case "$TERM" in
+                *xterm*)
+                    TERMINAL_EMULATOR="xterm"
+                    ;;
+                *gnome*)
+                    TERMINAL_EMULATOR="gnome-terminal"
+                    ;;
+                *konsole*)
+                    TERMINAL_EMULATOR="konsole"
+                    ;;
+                *xfce*)
+                    TERMINAL_EMULATOR="xfce4-terminal"
+                    ;;
+                *qterminal*)
+                    TERMINAL_EMULATOR="qterminal"
+                    ;;
+                *)
+                    TERMINAL_EMULATOR="unknown"
+                    ;;
+            esac
+        fi
+    fi
+
+# Inform the user about the detected terminal emulator
+echo "Detected terminal emulator: $TERMINAL_EMULATOR"
+
+# If the terminal emulator is not recognized, fall back to the default shell
+if [[ "$TERMINAL_EMULATOR" == "unknown" ]]; then
+        echo -e "\e[1;31mUnknown terminal emulator, falling back to generic shell command...\e[0m"
         (sleep 0.5 && $SHELL) & disown
+    else
+        # Proceed with terminal-specific actions
+        case "$TERMINAL_EMULATOR" in
+            "qterminal")
+                echo -e "\e[1;33mClosing the current terminal and opening a new qterminal...\e[0m"
+                exit
+                qterminal & disown
+                ;;
+            "xfce4-terminal")
+                echo -e "\e[1;33mClosing the current terminal and opening a new xfce4-terminal...\e[0m"
+                exit
+                xfce4-terminal & disown
+                ;;
+            "gnome-terminal")
+                echo -e "\e[1;33mClosing the current terminal and opening a new gnome-terminal...\e[0m"
+                exit
+                gnome-terminal & disown
+                ;;
+            "konsole")
+                echo -e "\e[1;33mClosing the current terminal and opening a new konsole...\e[0m"
+                exit
+                konsole & disown
+                ;;
+            *)
+                echo -e "\e[1;31mUnknown terminal emulator: $TERMINAL_EMULATOR\e[0m"
+                echo -e "\e[1;33mFalling back to default shell: (sleep 0.5 && $SHELL)\e[0m"
+                (sleep 0.5 && $SHELL) & disown
+                ;;
+        esac
     fi
 fi
+
