@@ -33,7 +33,7 @@ These are automatically installed by `dbd-setup.sh` if missing:
 Just run this:
 
 ```bash
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/BlackFlame444/dbd-plugin/main/dbd-setup.sh)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/BlackFlame444/dpd-plugin/refs/heads/main/dbd-setup.sh)"
 ```
 
 ---
