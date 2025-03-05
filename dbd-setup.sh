@@ -17,7 +17,6 @@ mkdir -p "$FONT_DIR"
 echo -e "\nInstalling dependencies..."
 sudo apt-get update
 sudo apt-get install -y figlet lolcat toilet otf2bdf bdf2psf git
-clear
 
 # Clone and extract fonts
 echo -e "\nDownloading and installing figlet fonts..."
@@ -31,17 +30,22 @@ for repo in "${FONT_REPOS[@]}"; do
     git clone "$repo" "$tmp_dir"
     find "$tmp_dir" -type f -name "*.flf" -exec cp {} "$FONT_DIR/" \;
     rm -rf "$tmp_dir"
-    clear
 done
 
-# Confirm the default font exists
-if [[ ! -f "$FONT_DIR/$DEFAULT_FONT.flf" ]]; then
-    echo -e "\n⚠️  Default font '$DEFAULT_FONT' not found. Falling back to 'Standard'."
+# Set initial default font to 'lowerb' if present, otherwise fallback to 'Standard'
+DEFAULT_FONT="lowerb"
+
+if [[ ! -f "$FONT_DIR/${DEFAULT_FONT}.flf" ]]; then
+    echo -e "\n⚠️  Default font 'lowerb' not found. Falling back to 'Standard'."
     DEFAULT_FONT="Standard"
 fi
 
-# Create config file if missing
-if [ ! -f "$CONFIG_FILE" ]; then
+if [[ ! -f "$FONT_DIR/${DEFAULT_FONT}.flf" ]]; then
+    echo -e "\n❌ Critical: Default font 'Standard' not found either. Plugin may not function correctly."
+fi
+
+# Create config file if missing — ensures lowerb is written if found
+if [[ ! -f "$CONFIG_FILE" ]]; then
     cat > "$CONFIG_FILE" <<EOF
 # DBD System Plugin Configuration
 DBD_FONT="$DEFAULT_FONT"
@@ -60,18 +64,19 @@ source ~/.oh-my-zsh/custom/plugins/dbd-plugin/dbd-config.zsh
 
 autoload -U add-zsh-hook
 
-# Font Loader (called directly within banner logic)
 load_dbd_font() {
-    FONT_PATH="$PLUGIN_DIR/dbd-fonts/export/${DBD_FONT}.flf"
+    FONT_PATH="$DBD_FONT_DIR/${DBD_FONT}.flf"
+
     if [[ ! -f "$FONT_PATH" ]]; then
-        echo "⚠️ Font not found: $FONT_PATH. Falling back to 'Standard'."
-        FONT_PATH="$HOME/.dbd-plugin/dbd-fonts/export/Standard.flf"
+        echo "⚠️ Font '$DBD_FONT' not found in $DBD_FONT_DIR. Falling back to 'Standard'."
+        FONT_PATH="$DBD_FONT_DIR/Standard.flf"
         if [[ ! -f "$FONT_PATH" ]]; then
-            echo "❌ Default font 'Standard' not found. Please install a font."
+            echo "❌ Default font 'Standard' is missing. Please reinstall fonts."
             return 1
         fi
     fi
-    export FIGLET_FONTDIR="$HOME/.oh-my-zsh/custom/plugins/dbd-plugin/dbd-fonts/export"
+
+    export FIGLET_FONTDIR="$DBD_FONT_DIR"
 }
 
 print_dbd_banner() {
@@ -79,59 +84,37 @@ print_dbd_banner() {
     load_dbd_font || return
 
     clear
-
     local dir_name=$(basename "$PWD")
 
-    # Apply Random Mode if enabled
     if [[ "$DBD_RANDOM_MODE" == "true" ]]; then
-        DBD_FONT=$(ls ~/dbd-plugin/dbd-fonts/export | shuf -n1 | sed 's/\.flf$//')
+        DBD_FONT=$(ls "$DBD_FONT_DIR" | shuf -n1 | sed 's/\.flf$//')
         DBD_COLOR=$(echo "cyan red green orange purple blue yellow lolcat" | tr ' ' '\n' | shuf -n1)
     fi
 
-    # Print banner
     if command -v lolcat &>/dev/null; then
-        figlet -w $DBD_WIDTH -f "$FONT_PATH" "$dir_name" | lolcat
+        figlet -w $DBD_WIDTH -f "$DBD_FONT" "$dir_name" | lolcat
     else
-        figlet -w $DBD_WIDTH -f "$FONT_PATH" "$dir_name"
+        figlet -w $DBD_WIDTH -f "$DBD_FONT" "$dir_name"
     fi
     echo ""
     ls --color=auto
 }
-# Directory Change Hook
+
 add-zsh-hook chpwd print_dbd_banner
 
-# First-run banner (optional welcome)
 if [[ ! -f "$HOME/.oh-my-zsh/custom/plugins/dbd-plugin/.first-run" ]]; then
     touch "$HOME/.oh-my-zsh/custom/plugins/dbd-plugin/.first-run"
     clear
-    echo "Welcome to the DBD System Plugin" | figlet -w $DBD_WIDTH -f "$FONT_PATH" | eval "$DBD_COLOR"
+    load_dbd_font || return
+    echo "Welcome to the DBD System Plugin" | figlet -w $DBD_WIDTH -f "$DBD_FONT" | eval "$DBD_COLOR"
     sleep 2
 fi
 
-# Manual Trigger Command (optional helper)
-dbd-show() {
-    print_dbd_banner
-}
+dbd-show() { print_dbd_banner; }
+dbd-config() { source ~/.oh-my-zsh/custom/plugins/dbd-plugin/dbd-functions.zsh; dbd-config; }
+dbd-font() { source ~/.oh-my-zsh/custom/plugins/dbd-plugin/dbd-functions.zsh; dbd-font "$@"; }
+dbd-list-fonts() { ls -1 "$DBD_FONT_DIR" | sed 's/\.flf$//'; }
 
-# Config Manager Command
-dbd-config() {
-    source ~/.oh-my-zsh/custom/plugins/dbd-plugin/dbd-functions.zsh
-    dbd-config
-}
-
-# Font Converter Helper
-dbd-font() {
-    source ~/.oh-my-zsh/custom/plugins/dbd-plugin/dbd-functions.zsh
-    dbd-font "$@"
-}
-
-# List Available Fonts
-dbd-list-fonts() {
-    echo "Available DBD Fonts:"
-    ls -1 "$DBD_FONT_DIR" | sed 's/\.flf$//'
-}
-
-# Initial banner (for first directory shell opens in)
 print_dbd_banner
 EOF
 
@@ -221,7 +204,6 @@ if ! grep -q 'source ~/.oh-my-zsh/custom/plugins/dbd-plugin/dbd-plugin.zsh' "$HO
 fi
 
 # Final Installation Message
-clear
 echo -e "\n\033[1;36mDBD System Plugin Installed Successfully!\033[0m"
 
 echo -e "\n\033[1;33mWould you like to restart your terminal now?\033[0m"
@@ -232,8 +214,9 @@ read -r -p "[Enter/s]: " choice
 
 if [[ -z "$choice" ]]; then
     zsh -c "source ~/.zshrc" 
-    xfce4-terminal &
+    xfce4-terminal & disown
     exit
+
 elif [[ "$choice" =~ ^[Ss]$ ]]; then
     echo -e "\n\033[1;32mYou can manually reload later with:\033[0m"
     echo "source ~/.zshrc"
