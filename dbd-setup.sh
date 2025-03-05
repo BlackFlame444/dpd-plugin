@@ -28,9 +28,13 @@ FONT_REPOS=(
 for repo in "${FONT_REPOS[@]}"; do
     repo_name=$(basename "$repo" .git)
     git clone "$repo" "$PLUGIN_DIR/$repo_name"
-    cp "$PLUGIN_DIR/$repo_name"/*.flf "$FONT_DIR/"
+    
+    # Find and copy all .flf files to the font directory
+    find "$PLUGIN_DIR/$repo_name" -type f -name "*.flf" -exec cp {} "$FONT_DIR/" \;
+    
     rm -rf "$PLUGIN_DIR/$repo_name"
 done
+
 
 # Set the default font
 if [[ -f "$FONT_DIR/$DEFAULT_FONT.flf" ]]; then
@@ -221,7 +225,7 @@ else
     echo "DBD System Plugin already present in .zshrc."
 fi
 
-# Final prompt: Reload and Reboot Terminal or Skip
+# Reload and Reboot Terminal or Skip
 echo ""
 echo -e "\e[1;36mDBD System Plugin installation completed!\e[0m"
 echo ""
@@ -239,42 +243,16 @@ else
     sleep 0.5
     source ~/.zshrc
 
-    # Universal terminal reboot handling (prioritize TERMINAL_EMULATOR if present)
-    if [[ -n "$TERMINAL_EMULATOR" ]]; then
-        case "$TERMINAL_EMULATOR" in
-            "qterminal")
-                (sleep 0.5 && qterminal) & disown
-                ;;
-            "xfce4-terminal")
-                (sleep 0.5 && xfce4-terminal) & disown
-                ;;
-            "gnome-terminal-server")
-                (sleep 0.5 && gnome-terminal) & disown
-                ;;
-            "konsole")
-                (sleep 0.5 && konsole) & disown
-                ;;
-            *)
-                echo -e "\e[1;31mUnknown terminal emulator: $TERMINAL_EMULATOR\e[0m"
-                echo -e "\e[1;33mFalling back to generic shell command: (sleep 0.5 && $SHELL)\e[0m"
-                (sleep 0.5 && $SHELL) & disown
-                ;;
-        esac
+    # Close current terminal and open a new one (specifically for xfce4-terminal)
+    if [[ "$TERMINAL_EMULATOR" == "xfce4-terminal" ]]; then
+        echo -e "\e[1;33mClosing the current terminal and opening a new xfce4-terminal...\e[0m"
+        # Close the current terminal
+        exit
+        # Open a new xfce4-terminal
+        xfce4-terminal & disown
     else
-        # Fallback if TERMINAL_EMULATOR is not set
-        if command -v qterminal >/dev/null 2>&1; then
-            (sleep 0.5 && qterminal) & disown
-        elif command -v xfce4-terminal >/dev/null 2>&1; then
-            (sleep 0.5 && xfce4-terminal) & disown
-        elif command -v gnome-terminal >/dev/null 2>&1; then
-            (sleep 0.5 && gnome-terminal) & disown
-        elif command -v konsole >/dev/null 2>&1; then
-            (sleep 0.5 && konsole) & disown
-        else
-            echo -e "\e[1;31mCould not detect terminal emulator. Starting a new shell instead.\e[0m"
-            (sleep 0.5 && $SHELL) & disown
-        fi
+        echo -e "\e[1;31mUnknown terminal emulator: $TERMINAL_EMULATOR\e[0m"
+        echo -e "\e[1;33mFalling back to generic shell command: (sleep 0.5 && $SHELL)\e[0m"
+        (sleep 0.5 && $SHELL) & disown
     fi
-
-    exit
 fi
