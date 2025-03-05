@@ -1,7 +1,7 @@
 #!/bin/bash
 # dbd-setup.sh - Complete setup script for DBD System Plugin
 
-PLUGIN_DIR="$HOME/.dbd-plugin"
+PLUGIN_DIR="$HOME/.oh-my-zsh/custom/plugins/dbd-plugin"
 FONT_DIR="$PLUGIN_DIR/dbd-fonts/export"
 CONFIG_FILE="$PLUGIN_DIR/dbd-config.zsh"
 FUNCTIONS_FILE="$PLUGIN_DIR/dbd-functions.zsh"
