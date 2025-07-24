@@ -111,7 +111,7 @@ dbd-list-fonts
 Drop your `.flf` files directly into:
 
 ```
-~/.oh-my-zsh/custom/plugins/dbd-plugin/dbd-fonts/export/
+dbd-ff https://github.com/user/figlet-fonts.git
 ```
 
 ---
@@ -120,12 +120,10 @@ Drop your `.flf` files directly into:
 
 ```
 dbd-plugin/
-├── dbd-plugin.zsh          # Main plugin logic
-├── dbd-functions.zsh       # Helper functions
+├── dbd.plugin.zsh          # Main plugin loader
 ├── dbd-config.zsh          # User configuration
-├── dbd-fonts/
-│   └── export/              # All usable .flf fonts live here
-└── dbd-setup.sh            # Setup script
+├── dbd-setup.sh            # Installation script
+└── /usr/local/share/figlet # System font directory (300+ fonts)
 ```
 
 ---
@@ -133,13 +131,15 @@ dbd-plugin/
 ## ✅ Example Banner
 
 ```bash
-      █ █         █            █              ▀
-  ▄▀▀▀█ █▀▀▀▄ ▄▀▀▀█      ▄▀▀▀▄ █ █   █ ▄▀▀▀▄ ▀█  █▀▀▄
-  █   █ █   █ █   █ ▀▀▀▀ █   █ █ █   █ █   █  █  █  █
-▄ ▀▄▄▄▀ ▀▄▄▄▀ ▀▄▄▄▀      █▄▄▄▀ █ ▀▄▄▄▀ ▀▄▄▄█ ▄█▄ █  █
-                         █              ▄▄▄▀
 
-dbd-cli.zsh  dbd-config.zsh  dbd-fonts  dbd-functions.zsh  dbd-plugin.zsh  dbd-setup.sh
+    █ █         █            █              ▀
+▄▀▀▀█ █▀▀▀▄ ▄▀▀▀█      ▄▀▀▀▄ █ █   █ ▄▀▀▀▄ ▀█  █▀▀▄
+█   █ █   █ █   █ ▀▀▀▀ █   █ █ █   █ █   █  █  █  █
+▀▄▄▄▀ ▀▄▄▄▀ ▀▄▄▄▀      █▄▄▄▀ █ ▀▄▄▄▀ ▀▄▄▄█ ▄█▄ █  █
+                       █              ▄▄▄▀
+📂 /.oh-my-zsh/custom/plugins/dbd-plugin
+
+dbd-fonts  dbd-config.zsh  dbd-plugin.zsh
 
 ```
 
